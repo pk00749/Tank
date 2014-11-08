@@ -4,7 +4,7 @@ import os
 import sys
 import time
 import datetime
-import pygame
+import pygame as pg
 import math
 from pygame.locals import *
 from pygame.font import *
@@ -18,7 +18,7 @@ def load_image(pic_name):
         path = os.path.join(current_dir, 'Resources', pic_name)
 
         #加载图片
-        return pygame.image.load(path).convert()
+        return pg.image.load(path).convert()
 
 
 def control_tank(event):
@@ -27,31 +27,50 @@ def control_tank(event):
         mytankpos = [x, y] = [0, 0]
         pre_mytankpos = [prex, prey] = [0, 0]
         degrees = 0
+        turn_time = [l, r, u, d] = [0, 0, 0, 0]
 
         #检查被按下的按键
-        key = pygame.key.get_pressed()                  
+        key = pg.key.get_pressed()                  
 
-        if key[pygame.K_a]:
+        if key[pg.K_a]:
                 pre_mytankpos[0] = mytankpos[0]
                 mytankpos[0] -= 5
-        if key[pygame.K_d]:
+                turn_time[0] += 1
+                turn_time[1] = 0
+                turn_time[2] = 0
+                turn_time[3] = 0
+        if key[pg.K_d]:
                 pre_mytankpos[0] = mytankpos[0]
                 mytankpos[0] += 5
-        if key[pygame.K_w]:
+                turn_time[0] = 0
+                turn_time[1] += 1
+                turn_time[2] = 0
+                turn_time[3] = 0
+        if key[pg.K_w]:
                 pre_mytankpos[1] = mytankpos[1]
                 mytankpos[1] -= 5
-        if key[pygame.K_s]:
+                turn_time[0] = 0
+                turn_time[1] = 0
+                turn_time[2] += 1
+                turn_time[3] = 0
+        if key[pg.K_s]:
                 pre_mytankpos[1] = mytankpos[1]
                 mytankpos[1] += 5
+                turn_time[0] = 0
+                turn_time[1] = 0
+                turn_time[2] = 0
+                turn_time[3] += 1
         degrees = 0
-        return mytankpos, pre_mytankpos, degrees
+        print('is',turn_time[0],turn_time[1],turn_time[2],turn_time[3])
+        print('is',mytankpos[0],mytankpos[1])
+        return mytankpos, pre_mytankpos, degrees, turn_time
         #return mytankpos
 
 def show_text(surface_handle, pos, text, color, font_bold = False, font_size = 20, font_italic = 
 False):
         
         #获取系统字体，并设置文字大小
-        cur_font = pygame.font.SysFont('arial', font_size)
+        cur_font = pg.font.SysFont('arial', font_size)
         #设置是否加粗属性
         cur_font.set_bold(font_bold)
         #设置是否斜体属性
@@ -62,17 +81,17 @@ False):
         surface_handle.blit(text_fmt, pos)        
 
 def play_tank():
-        #任何pygame程序均需要执行此句进行模块初始化 
-        pygame.init()
+        #任何pg程序均需要执行此句进行模块初始化 
+        pg.init()
 
         #窗口大小  
         window_size = Rect(0, 0, 700, 500)
         
         #设置窗口模式
-        screen = pygame.display.set_mode(window_size.size)
+        screen = pg.display.set_mode(window_size.size)
 
         #设置窗口标题
-        pygame.display.set_caption('Tank')
+        pg.display.set_caption('Tank')
 
         #加载小球图片
         mytank_image = load_image('myTank.png')
@@ -80,7 +99,7 @@ def play_tank():
         backgroud_image = load_image('backgroud.jpg')
         mytank_rect = mytank_image.get_rect()       
 
-        font = pygame.font.SysFont('arial', 40)
+        font = pg.font.SysFont('arial', 40)
         text_surface = font.render('Hello', True, (0, 0, 255))
        
         xx = 0
@@ -90,13 +109,13 @@ def play_tank():
         #循环，直到接收到窗口关闭事件
         while True:
                 #退出事件处理  
-                for event in pygame.event.get():
+                for event in pg.event.get():
                         if event.type == QUIT: 
-                                pygame.quit()
+                                pg.quit()
                                 sys.exit()
                                 
                 #使小球移动，速度由speed变量控制 
-                cur_speed, pre_speed, cur_degrees = control_tank(event)
+                cur_speed, pre_speed, cur_degrees, cur_turn_time = control_tank(event)
                 #cur_speed= control_tank(event)
                 #Rect的clamp方法使用移动范围限制在窗口内
                 mytank_rect = mytank_rect.move(cur_speed).clamp(window_size)
@@ -106,11 +125,12 @@ def play_tank():
                 
                 #获取小球图片的区域型状
                 #if cur_speed[0] != pre_speed[0] and cur_speed[1] == pre_speed[1]:
-                if cur_speed[0] != pre_speed[0]:
-                        cur_degrees = 90
-                
-                mytank_image = pygame.transform.rotate(mytank_image, cur_degrees)
-                #mytank_rect = cur_speed
+                #if cur_speed[0] != pre_speed[0]:
+                cur_degrees = 90
+
+                if(cur_turn_time[0] == 1 or cur_turn_time[1] == 1 or cur_turn_time[2] == 1 or cur_turn_time[3] == 1):
+                        mytank_image = pg.transform.rotate(mytank_image, cur_degrees)
+                        #mytank_rect = cur_speed
                 
                 #在背景Surface上绘制坦克
                 screen.blit(mytank_image, mytank_rect)
@@ -133,7 +153,7 @@ def play_tank():
 
                              
                 #将Surface对象上帝绘制在屏幕上		
-                pygame.display.flip()
+                pg.display.flip()
 		
 if __name__ == "__main__":
         play_tank()
