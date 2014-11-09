@@ -21,51 +21,6 @@ def load_image(pic_name):
         return pg.image.load(path).convert()
 
 
-def control_tank(event):
-
-        #相对偏移坐标
-        mytankpos = [x, y] = [0, 0]
-        pre_mytankpos = [prex, prey] = [0, 0]
-        degrees = 0
-        turn_time = [l, r, u, d] = [0, 0, 0, 0]
-
-        #检查被按下的按键
-        key = pg.key.get_pressed()                  
-
-        if key[pg.K_a]:
-                pre_mytankpos[0] = mytankpos[0]
-                mytankpos[0] -= 5
-                turn_time[0] += 1
-                turn_time[1] = 0
-                turn_time[2] = 0
-                turn_time[3] = 0
-        if key[pg.K_d]:
-                pre_mytankpos[0] = mytankpos[0]
-                mytankpos[0] += 5
-                turn_time[0] = 0
-                turn_time[1] += 1
-                turn_time[2] = 0
-                turn_time[3] = 0
-        if key[pg.K_w]:
-                pre_mytankpos[1] = mytankpos[1]
-                mytankpos[1] -= 5
-                turn_time[0] = 0
-                turn_time[1] = 0
-                turn_time[2] += 1
-                turn_time[3] = 0
-        if key[pg.K_s]:
-                pre_mytankpos[1] = mytankpos[1]
-                mytankpos[1] += 5
-                turn_time[0] = 0
-                turn_time[1] = 0
-                turn_time[2] = 0
-                turn_time[3] += 1
-        degrees = 0
-        print('is',turn_time[0],turn_time[1],turn_time[2],turn_time[3])
-        print('is',mytankpos[0],mytankpos[1])
-        return mytankpos, pre_mytankpos, degrees, turn_time
-        #return mytankpos
-
 def show_text(surface_handle, pos, text, color, font_bold = False, font_size = 20, font_italic = 
 False):
         
@@ -78,26 +33,46 @@ False):
         #设置文字内容
         text_fmt = cur_font.render(text, True, color)
         #绘制文字
-        surface_handle.blit(text_fmt, pos)        
+        surface_handle.blit(text_fmt, pos)
+
+
+def control_tank(event):
+
+        #相对偏移坐标
+        mytankpos = [x, y] = [0, 0]
+        pre_mytankpos = [prex, prey] = [0, 0]
+
+        #检查被按下的按键
+        key = pg.key.get_pressed()                  
+
+        if key[pg.K_a]:
+                pre_mytankpos[0] = mytankpos[0]
+                mytankpos[0] -= 5
+
+        if key[pg.K_d]:
+                pre_mytankpos[0] = mytankpos[0]
+                mytankpos[0] += 5
+
+        if key[pg.K_w]:
+                pre_mytankpos[1] = mytankpos[1]
+                mytankpos[1] -= 5
+
+        if key[pg.K_s]:
+                pre_mytankpos[1] = mytankpos[1]
+                mytankpos[1] += 5
+
+        
+        return mytankpos, pre_mytankpos
+        #return mytankpos
+  
 
 def play_tank():
-        #任何pg程序均需要执行此句进行模块初始化 
-        pg.init()
 
-        #窗口大小  
-        window_size = Rect(0, 0, 700, 500)
         
-        #设置窗口模式
-        screen = pg.display.set_mode(window_size.size)
-
-        #设置窗口标题
-        pg.display.set_caption('Tank')
-
-        #加载小球图片
-        mytank_image = load_image('myTank.png')
+        mytank_rect = mytank_up.get_rect() 
          #加载窗口背景图片 
         backgroud_image = load_image('backgroud.jpg')
-        mytank_rect = mytank_image.get_rect()       
+             
 
         font = pg.font.SysFont('arial', 40)
         text_surface = font.render('Hello', True, (0, 0, 255))
@@ -115,25 +90,18 @@ def play_tank():
                                 sys.exit()
                                 
                 #使小球移动，速度由speed变量控制 
-                cur_speed, pre_speed, cur_degrees, cur_turn_time = control_tank(event)
+                cur_speed, pre_speed = control_tank(event)
                 #cur_speed= control_tank(event)
                 #Rect的clamp方法使用移动范围限制在窗口内
                 mytank_rect = mytank_rect.move(cur_speed).clamp(window_size)
                 
                 #设置窗口背景asd
                 screen.blit(backgroud_image, (0, 0))
-                
-                #获取小球图片的区域型状
-                #if cur_speed[0] != pre_speed[0] and cur_speed[1] == pre_speed[1]:
-                #if cur_speed[0] != pre_speed[0]:
-                cur_degrees = 90
 
-                if(cur_turn_time[0] == 1 or cur_turn_time[1] == 1 or cur_turn_time[2] == 1 or cur_turn_time[3] == 1):
-                        mytank_image = pg.transform.rotate(mytank_image, cur_degrees)
-                        #mytank_rect = cur_speed
                 
                 #在背景Surface上绘制坦克
-                screen.blit(mytank_image, mytank_rect)
+                screen.blit(mytank_up, mytank_rect)
+                
 
                 xx -= 0.1
                 if xx < -text_surface.get_width():
@@ -154,6 +122,24 @@ def play_tank():
                              
                 #将Surface对象上帝绘制在屏幕上		
                 pg.display.flip()
-		
+	
+
+def get_frames(self):
+    frames = []
+    frames.append(mytank_up)
+    frames.append(mytank_down)
+    frames.append(mytank_left)
+    frames.append(mytank_right)
+    return frames
+
 if __name__ == "__main__":
+        pg.init()
+        window_size = Rect(0, 0, 700, 500)
+        screen = pg.display.set_mode(window_size.size)
+        pg.display.set_caption('Tank')
+        mytank_up = load_image('myTank_up.png')
+        mytank_down = load_image('myTank_down.png')
+        mytank_left = load_image('myTank_left.png')
+        mytank_right = load_image('myTank_right.png')
+        
         play_tank()
