@@ -9,6 +9,12 @@ import math
 from pygame.locals import *
 from pygame.font import *
 
+
+DIRECT_DICT = {pg.K_w : ( 0,-1),
+               pg.K_s : ( 0, 1),
+               pg.K_a : (-1, 0),
+               pg.K_d : ( 1, 0)}
+
 def load_image(pic_name):
     #获取当前脚本文件所在目录的绝对路径
     current_dir = os.path.split(os.path.abspath(__file__))[0]
@@ -39,58 +45,75 @@ def text():
     text_time = "Time: %s" % time.strftime("%H:%M:%S", time.gmtime())
     show_text(screen, (20, 420), text_time, (0, 255, 0), False, 30, False)
            
+  
+class Tank:
+    def __init__(self, speed, direction=pg.K_d):
 
-def control_tank(event):
+        #self.direction = 
+        self.speed = speed
+        self.keys = pg.key.get_pressed()
+        self.direction = direction
+        self.direction_stack = []
+        self.old_direction = None
+        self.frames = self.get_frames()
+        #self.walkframe = self.make_frame_dict()
 
+    def add_direction(self, key):
+        if key in DIRECT_DICT:
+            if key in self.direction_stack:
+                self.direction_stack.remove(key)
+            self.direction_stack.append(key)
+            self.direction = self.direction_stack[-1]
+            print('Add',self.direction_stack)
+
+    def pop_direction(self, key):
+        if key in DIRECT_DICT:
+            if key in self.direction_stack:
+                self.direction_stack.remove(key)
+            if self.direction_stack:
+                self.direction = self.direction_stack[-1]
+            print('Pop',self.direction_stack)
+        
+    def make_frame_dict(self):
+        frames = {  pg.K_w : mytank_up,
+                    pg.K_s : mytank_down,
+                    pg.K_a : mytank_left,
+                    pg.K_d : mytank_right}
+        return frames
+        
+    def adjust_image(self):
+        if self.old_direction != self.direction:
+            self.walkframe = self.make_frame_dict[self.direction]
+            self.old_direction = self.direction
+                
+    def control_tank(self):
         #相对偏移坐标
         mytankpos = [x, y] = [0, 0]
         pre_mytankpos = [prex, prey] = [0, 0]
 
-        #检查被按下的按键
-        key = pg.key.get_pressed()                  
+        if self.direction_stack:       
+            vector = DIRECT_DICT[self.direction]           
 
-        if key[pg.K_a]:
-                pre_mytankpos[0] = mytankpos[0]
-                mytankpos[0] -= 5
+            pre_mytankpos[0] = mytankpos[0]
+            mytankpos[0] += self.speed*vector[0]
 
-        if key[pg.K_d]:
-                pre_mytankpos[0] = mytankpos[0]
-                mytankpos[0] += 5
+            pre_mytankpos[1] = mytankpos[1]
+            mytankpos[1] += self.speed*vector[1]
 
-        if key[pg.K_w]:
-                pre_mytankpos[1] = mytankpos[1]
-                mytankpos[1] -= 5
-
-        if key[pg.K_s]:
-                pre_mytankpos[1] = mytankpos[1]
-                mytankpos[1] += 5
-
-        
         return mytankpos, pre_mytankpos
         #return mytankpos
-  
-class Tank:
-    def __init__(self, direction = pg.K_RIGHT):
 
-        self.direction = direction
-        #self.old_direction = None
-        #self.frames = self.get_frames()
-        #self.walkframe_dict = self.make_frames_dict()
+    def event_loop(self):
+        for event in pg.event.get():
+            self.keys = pg.key.get_pressed()
+            if event.type == QUIT or self.keys[pg.K_ESCAPE]: 
+                            pg.quit()
+                            sys.exit()
+            elif event.type == pg.KEYDOWN:
+                self.add_direction(event.key)
+            elif event.type == pg.KEYUP:
+                self.pop_direction(event.key)
         
-    '''def make_frames_dict(selfasda):
-        frames = {pg.K_UP : [self.frames[0]],
-                  pg.K_DOWN : [self.frames[1]],
-                  pg.K_LEFT : [self.frames[2]],
-                  pg.K_RIGHT: [self.frames[3]]}
-        return frames
-    
-    def adjust_image(self):
-        self.walkframes = self.walkframe_dict[self.direction]
-        self.old_direction = self.direction
-        
-    def update(self):
-        self.adjust_image()
-    '''    
     
     def play_tank(self):
         mytank_rect = mytank_up.get_rect() 
@@ -106,13 +129,12 @@ class Tank:
         #循环，直到接收到窗口关闭事件
         while True:
             #退出事件处理  
-            for event in pg.event.get():
-                    if event.type == QUIT: 
-                            pg.quit()
-                            sys.exit()
+            self.event_loop()
                             
-            #使小球移动，速度由speed变量控制 
-            cur_speed, pre_speed = control_tank(event)
+            #使小球移动，速度由speed变量控制
+            
+            cur_speed, pre_speed = self.control_tank()
+
             #cur_speed= control_tank(event)
             #Rect的clamp方法使用移动范围限制在窗口内
             mytank_rect = mytank_rect.move(cur_speed).clamp(window_size)
@@ -120,27 +142,31 @@ class Tank:
             #设置窗口背景asd
             screen.blit(backgroud_image, (0, 0))
 
-            if event.type == KEYDOWN:
-                if event.key == K_a:
-                    screen.blit(mytank_left, mytank_rect)
-                elif event.key == K_d:
-                    screen.blit(mytank_right, mytank_rect)
-                elif event.key == K_w:
-                    screen.blit(mytank_up, mytank_rect)
-                elif event.key == K_s:
-                    screen.blit(mytank_down, mytank_rect)
-            elif event.type == KEYUP:
-                if event.key == K_a:
-                    screen.blit(mytank_left, mytank_rect)
-                elif event.key == K_d:
-                    screen.blit(mytank_right, mytank_rect)
-                elif event.key == K_w:
-                    screen.blit(mytank_up, mytank_rect)
-                elif event.key == K_s:
-                    screen.blit(mytank_down, mytank_rect)
+            #if event.type == KEYDOWN:
+            #for event in pg.event.get():
+           #     if self.old_direction != self.direction:
+             #       if event.type == self.keys[pg.K_a]:
+             #           screen.blit(mytank_left, mytank_rect)
+                # elif event.key == K_d:
+                #     screen.blit(mytank_right, mytank_rect)
+                # elif event.key == K_w:
+                #     screen.blit(mytank_up, mytank_rect)
+                # elif event.key == K_s:
+                #     screen.blit(mytank_down, mytank_rect)
+                # elif event.type == KEYUP:
+                #     if event.key == K_a:
+                #         screen.blit(mytank_left, mytank_rect)
+                #     elif event.key == K_d:
+                #         screen.blit(mytank_right, mytank_rect)
+                #     elif event.key == K_w:
+                #         screen.blit(mytank_up, mytank_rect)
+                #     elif event.key == K_s:
+                #         screen.blit(mytank_down, mytank_rect)
 
             #在背景Surface上绘制坦克
-            #screen.blit(mytank_up, mytank_rect)
+            screen.blit(mytank_up, mytank_rect)
+            #screen.blit(self.walkframe, mytank_rect)
+            
             
 
             xx -= 0.1
@@ -179,5 +205,5 @@ if __name__ == "__main__":
         mytank_down = load_image('myTank_down.png')
         mytank_left = load_image('myTank_left.png')
         mytank_right = load_image('myTank_right.png')
-        t = Tank()
+        t = Tank(5)
         t.play_tank()
