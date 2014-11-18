@@ -83,7 +83,7 @@ class Tank:
         
     def adjust_image(self):
         if self.old_direction != self.direction:
-            self.walkframe = self.make_frame_dict[self.direction]
+            #self.walkframe = self.make_frame_dict[self.direction]
             self.old_direction = self.direction
                 
     def control_tank(self):
@@ -130,11 +130,11 @@ class Tank:
         while True:
             #退出事件处理  
             self.event_loop()
-                            
+                           
             #使小球移动，速度由speed变量控制
             
             cur_speed, pre_speed = self.control_tank()
-
+            
             #cur_speed= control_tank(event)
             #Rect的clamp方法使用移动范围限制在窗口内
             mytank_rect = mytank_rect.move(cur_speed).clamp(window_size)
@@ -143,10 +143,6 @@ class Tank:
             screen.blit(backgroud_image, (0, 0))
 
             #if event.type == KEYDOWN:
-            #for event in pg.event.get():
-           #     if self.old_direction != self.direction:
-             #       if event.type == self.keys[pg.K_a]:
-             #           screen.blit(mytank_left, mytank_rect)
                 # elif event.key == K_d:
                 #     screen.blit(mytank_right, mytank_rect)
                 # elif event.key == K_w:
