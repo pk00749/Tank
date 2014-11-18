@@ -49,7 +49,6 @@ def text():
 class Tank:
     def __init__(self, speed, direction=pg.K_d):
 
-        #self.direction = 
         self.speed = speed
         self.keys = pg.key.get_pressed()
         self.direction = direction
@@ -89,24 +88,22 @@ class Tank:
     def control_tank(self):
         
         self.adjust_image()
-        mytankpos = [x, y] = [0, 0]
+        tankpos = [x, y] = [0, 0]
 
         if self.direction_stack:       
             vector = DIRECT_DICT[self.direction]           
 
-            mytankpos[0] += self.speed*vector[0]
+            tankpos[0] += self.speed*vector[0]
+            tankpos[1] += self.speed*vector[1]
 
-            mytankpos[1] += self.speed*vector[1]
+        return tankpos
 
-        return mytankpos
-        #return mytankpos
-
-    def event_loop(self):
+    def catch_event_key(self):
         for event in pg.event.get():
             self.keys = pg.key.get_pressed()
             if event.type == QUIT or self.keys[pg.K_ESCAPE]: 
-                            pg.quit()
-                            sys.exit()
+                pg.quit()
+                sys.exit()
             elif event.type == pg.KEYDOWN:
                 self.add_direction(event.key)
             elif event.type == pg.KEYUP:
@@ -127,42 +124,18 @@ class Tank:
         #循环，直到接收到窗口关闭事件
         while True:
             #退出事件处理  
-            self.event_loop()
-                           
-            #使小球移动，速度由speed变量控制
+            self.catch_event_key()
             
             cur_speed = self.control_tank()
-            
-            #cur_speed= control_tank(event)
+
             #Rect的clamp方法使用移动范围限制在窗口内
             mytank_rect = mytank_rect.move(cur_speed).clamp(window_size)
             
             #设置窗口背景asd
             screen.blit(backgroud_image, (0, 0))
 
-            #if event.type == KEYDOWN:
-                # elif event.key == K_d:
-                #     screen.blit(mytank_right, mytank_rect)
-                # elif event.key == K_w:
-                #     screen.blit(mytank_up, mytank_rect)
-                # elif event.key == K_s:
-                #     screen.blit(mytank_down, mytank_rect)
-                # elif event.type == KEYUP:
-                #     if event.key == K_a:
-                #         screen.blit(mytank_left, mytank_rect)
-                #     elif event.key == K_d:
-                #         screen.blit(mytank_right, mytank_rect)
-                #     elif event.key == K_w:
-                #         screen.blit(mytank_up, mytank_rect)
-                #     elif event.key == K_s:
-                #         screen.blit(mytank_down, mytank_rect)
-
-            #在背景Surface上绘制坦克
-            #screen.blit(mytank_up, mytank_rect)
             screen.blit(self.walkframe, mytank_rect)
-            
-            
-
+                    
             xx -= 0.1
             if xx < -text_surface.get_width():
                     xx = 640 - text_surface.get_width()
@@ -186,9 +159,7 @@ class Tank:
         frames.append(mytank_down)
         frames.append(mytank_left)
         frames.append(mytank_right)
-        return frames
-    
-             
+        return frames          
 
 if __name__ == "__main__":
         pg.init()
