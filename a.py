@@ -56,7 +56,7 @@ class Tank:
         self.direction_stack = []
         self.old_direction = None
         self.frames = self.get_frames()
-        #self.walkframe = self.make_frame_dict()
+        self.walkframe_dict = self.make_frame_dict()
 
     def add_direction(self, key):
         if key in DIRECT_DICT:
@@ -75,32 +75,30 @@ class Tank:
             print('Pop',self.direction_stack)
         
     def make_frame_dict(self):
-        frames = {  pg.K_w : mytank_up,
-                    pg.K_s : mytank_down,
-                    pg.K_a : mytank_left,
-                    pg.K_d : mytank_right}
+        frames = {  pg.K_w : self.frames[0],
+                    pg.K_s : self.frames[1],
+                    pg.K_a : self.frames[2],
+                    pg.K_d : self.frames[3]}
         return frames
         
     def adjust_image(self):
         if self.old_direction != self.direction:
-            #self.walkframe = self.make_frame_dict[self.direction]
+            self.walkframe = self.walkframe_dict[self.direction]
             self.old_direction = self.direction
                 
     def control_tank(self):
-        #相对偏移坐标
+        
+        self.adjust_image()
         mytankpos = [x, y] = [0, 0]
-        pre_mytankpos = [prex, prey] = [0, 0]
 
         if self.direction_stack:       
             vector = DIRECT_DICT[self.direction]           
 
-            pre_mytankpos[0] = mytankpos[0]
             mytankpos[0] += self.speed*vector[0]
 
-            pre_mytankpos[1] = mytankpos[1]
             mytankpos[1] += self.speed*vector[1]
 
-        return mytankpos, pre_mytankpos
+        return mytankpos
         #return mytankpos
 
     def event_loop(self):
@@ -133,7 +131,7 @@ class Tank:
                            
             #使小球移动，速度由speed变量控制
             
-            cur_speed, pre_speed = self.control_tank()
+            cur_speed = self.control_tank()
             
             #cur_speed= control_tank(event)
             #Rect的clamp方法使用移动范围限制在窗口内
@@ -160,8 +158,8 @@ class Tank:
                 #         screen.blit(mytank_down, mytank_rect)
 
             #在背景Surface上绘制坦克
-            screen.blit(mytank_up, mytank_rect)
-            #screen.blit(self.walkframe, mytank_rect)
+            #screen.blit(mytank_up, mytank_rect)
+            screen.blit(self.walkframe, mytank_rect)
             
             
 
