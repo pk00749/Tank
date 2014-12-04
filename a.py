@@ -65,7 +65,7 @@ class Tank:
                 self.direction_stack.remove(key)
             self.direction_stack.append(key)
             self.direction = self.direction_stack[-1]
-            print('Add',self.direction_stack)
+            print('Add',self.direction_stack[0],self.direction,self.old_direction)
 
     def pop_direction(self, key):
         if key in DIRECT_DICT:
@@ -87,8 +87,7 @@ class Tank:
             self.walkframe = self.walkframe_dict[self.direction]
             self.old_direction = self.direction
                 
-    def control_tank(self):
-        
+    def control_tank(self):        
         self.adjust_frames()
         TankPos = [x, y] = [0, 0]
 
@@ -100,18 +99,25 @@ class Tank:
 
         return TankPos
 
-    def control_bullet(self,speed):
-        self.adjust_frames()
-        BulletPos = [x, y] = [0, 0]
+    def control_bullet(self, pos, rect, tankRect):
+        if self.direction == pg.K_d:
+            if pos[0] < 600:
+                pos[0] += 1
+                rect[0] = pos[0]
+            elif pos[0] >= 600:
+                pos[0] = tankRect[0]
+                rect[0] = 0
 
-        if self.direction_stack:
-            bullet_vector = DIRECT_DICT[self.direction]
+        # elif self.direction == pg.K_a:
+        #     if pos[0] > 10:
+        #         pos[0] -= 1
+        #         rect[0] = pos[0]
+        #     elif pos[0] <= 10:
+        #         pos[0] = tankRect[0]
+        #         rect[0] = 0
 
-            BulletPos[0] += self.speed * bullet_vector[0]
-            BulletPos[1] += self.speed * bullet_vector[1]
+        return rect
 
-        return BulletPos
-        #pass
 
     def catch_event_key(self):
         for event in pg.event.get():
@@ -123,33 +129,33 @@ class Tank:
                 self.add_direction(event.key)
             elif event.type == pg.KEYUP:
                 self.pop_direction(event.key)
-        
-    
+          
     def play_tank(self):
         mytank_rect = mytank_up.get_rect()
-        bullet_rect = self.bullet_frame.get_rect() 
+        bullet_cur_rect = self.bullet_frame.get_rect() 
          
         xx = 0
         yy = 0
 
+        BulletPos = [x,y] = [0,0]
+
         #循环，直到接收到窗口关闭事件
         while True:
+            
             #退出事件处理  
             self.catch_event_key()
             
             cur_speed = self.control_tank()
-            bullet_cur_speed = self.control_bullet(5)
-
+            bullet_cur_rect = self.control_bullet(BulletPos, bullet_cur_rect, mytank_rect)
             #Rect的clamp方法使用移动范围限制在窗口内
             mytank_rect = mytank_rect.move(cur_speed).clamp(window_size)
-            bullet_rect = bullet_rect.move(bullet_cur_speed).clamp(window_size)
-            
-            #设置窗口背景asd
+                       
+            print self.direction,self.old_direction       
             screen.blit(backgroud_image, (0, 0))
-
             screen.blit(self.walkframe, mytank_rect)
-            screen.blit(self.bullet_frame, bullet_rect)
-                    
+            screen.blit(self.bullet_frame, bullet_cur_rect)
+
+
             xx -= 0.1
             if xx < -text_surface.get_width():
                     xx = 640 - text_surface.get_width()
