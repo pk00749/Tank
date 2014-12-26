@@ -41,12 +41,38 @@ False):
     surface_handle.blit(text_fmt, pos)
 
 def text():
-    author_info = "Editor: YorkLi"
+    author_info = "Editor: York Li"
     show_text(screen, (20, 390), author_info, (0, 255, 0), False, 30, False)
     text_time = "Time: %s" % time.strftime("%H:%M:%S", time.gmtime())
     show_text(screen, (20, 420), text_time, (0, 255, 0), False, 30, False)
            
   
+class Bullets(pg.sprite.Sprite):
+    """docstring for Bullets"""
+    def __init__(self):
+        pg.sprite.Sprite.__init__(self)
+        self.original_bullet = bullet.subsurface((0, 0, 32, 32))
+        self.image = self.original_bullet
+        self.speed = 5
+        self.rect = self.image.get_rect()
+        self.move = [self.rect.x, self.rect.y]
+
+    def update(self, screen_rect):
+        self.move[0] += self.speed
+        self.move[1] += self.speed
+        self.rect.topleft = self.move
+        self.remove(screen_rect)
+        print ('update')
+
+    def remove(self, screen_rect):
+        if not self.rect.colliderect(screen_rect):
+            self.kill()
+            print ('remove')
+
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+        
+        
 class Tank:
     def __init__(self, speed, direction=pg.K_d):
 
@@ -57,7 +83,10 @@ class Tank:
         self.old_direction = None
         self.frames = self.get_frames()
         self.walkframe_dict = self.make_frames_dict()
-        self.bullet_frame = self.get_bullet_frame()
+        self.screen = pg.display.get_surface()
+        self.screen_rect = self.screen.get_rect()
+        self.bullets = Bullets()
+        self.objects = pg.sprite.Group()
 
     def add_direction(self, key):
         if key in DIRECT_DICT:
@@ -65,7 +94,7 @@ class Tank:
                 self.direction_stack.remove(key)
             self.direction_stack.append(key)
             self.direction = self.direction_stack[-1]
-            print('Add',self.direction_stack[0],self.direction,self.old_direction)
+            # print('Add',self.direction_stack[0],self.direction,self.old_direction)
 
     def pop_direction(self, key):
         if key in DIRECT_DICT:
@@ -73,7 +102,7 @@ class Tank:
                 self.direction_stack.remove(key)
             if self.direction_stack:
                 self.direction = self.direction_stack[-1]
-            print('Pop',self.direction_stack)
+            #print('Pop',self.direction_stack)
         
     def make_frames_dict(self):
         frames = {  pg.K_w : self.frames[0],
@@ -99,25 +128,11 @@ class Tank:
 
         return TankPos
 
-    def control_bullet(self, pos, rect, tankRect):
-        if self.direction == pg.K_d:
-            if pos[0] < 600:
-                pos[0] += 1
-                rect[0] = pos[0]
-            elif pos[0] >= 600:
-                pos[0] = tankRect[0]
-                rect[0] = 0
+    def update(self):
+        self.objects.update(self.screen_rect)
 
-        # elif self.direction == pg.K_a:
-        #     if pos[0] > 10:
-        #         pos[0] -= 1
-        #         rect[0] = pos[0]
-        #     elif pos[0] <= 10:
-        #         pos[0] = tankRect[0]
-        #         rect[0] = 0
-
-        return rect
-
+    def draw(self):
+        self.objects.draw(self.screen)
 
     def catch_event_key(self):
         for event in pg.event.get():
@@ -125,19 +140,22 @@ class Tank:
             if event.type == QUIT or self.keys[pg.K_ESCAPE]: 
                 pg.quit()
                 sys.exit()
-            elif event.type == pg.KEYDOWN:
-                self.add_direction(event.key)
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_SPACE:
+                    print ('1')
+                    self.objects.add(Bullets())
+                else:
+                    self.add_direction(event.key)               
             elif event.type == pg.KEYUP:
                 self.pop_direction(event.key)
+
+
           
     def play_tank(self):
         mytank_rect = mytank_up.get_rect()
-        bullet_cur_rect = self.bullet_frame.get_rect() 
          
         xx = 0
         yy = 0
-
-        BulletPos = [x,y] = [0,0]
 
         #循环，直到接收到窗口关闭事件
         while True:
@@ -146,21 +164,20 @@ class Tank:
             self.catch_event_key()
             
             cur_speed = self.control_tank()
-            bullet_cur_rect = self.control_bullet(BulletPos, bullet_cur_rect, mytank_rect)
             #Rect的clamp方法使用移动范围限制在窗口内
             mytank_rect = mytank_rect.move(cur_speed).clamp(window_size)
                        
-            print self.direction,self.old_direction       
+            # print self.direction,self.old_direction       
             screen.blit(backgroud_image, (0, 0))
             screen.blit(self.walkframe, mytank_rect)
-            screen.blit(self.bullet_frame, bullet_cur_rect)
-
-
+           
+            self.update()
+            self.draw()
             xx -= 0.1
             if xx < -text_surface.get_width():
                     xx = 640 - text_surface.get_width()
 
-            rolling_text = "Hello"
+            rolling_text = "Testing"
             show_text(screen, (xx, yy), rolling_text, (0, 0, 255), False, 40, False)
             
             text()
@@ -179,10 +196,6 @@ class Tank:
         frames.append(mytank_left)
         frames.append(mytank_right)
         return frames          
-
-    def get_bullet_frame(self):
-        frames_rect = ([0, 0], (32, 32))
-        return bullet.subsurface(frames_rect)
 
 
 if __name__ == "__main__":
