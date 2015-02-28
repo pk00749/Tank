@@ -71,7 +71,7 @@ class Bullets(pg.sprite.Sprite):
 
 
 class Tank:
-    def __init__(self, speed, bulletSpeed, cartridgeClip, tankRect, direction=pg.K_d):
+    def __init__(self, speed, bulletSpeed, cartridgeClip, tankRect, location, direction=pg.K_d):
         self.speed = speed
         self.keys = pg.key.get_pressed()
         self.direction = direction
@@ -86,6 +86,7 @@ class Tank:
         self.bulletSpeed = bulletSpeed
         self.cartridgeClip = cartridgeClip - 1
         self.rect = tankRect
+        self.location = location
 
     def add_direction(self, key):
         if key in DIRECT_DICT:
@@ -115,7 +116,7 @@ class Tank:
             self.walkframe = self.walkframeDict[self.direction]
             self.preDirection = self.direction
 
-    def control_speed_direction(self, obstacles):
+    def control_speed_direction(self):
         self.control_frames()
         tankPos = [x, y] = [0, 0]
 
@@ -144,8 +145,8 @@ class Tank:
             elif event.type == pg.KEYUP:
                 self.pop_direction(event.key)
 
-    def play_tank(self, obstacles):
-        cur_speed = self.control_speed_direction(obstacles)
+    def play_tank(self):
+        cur_speed = self.control_speed_direction()
         self.rect = self.rect.move(cur_speed).clamp(windowSize)# Rect的clamp方法使用移动范围限制在窗口内
         self.center = self.rect
         screen.blit(self.walkframe, self.rect)
@@ -174,9 +175,8 @@ class Control:
         self.rect = rect
         self.rect.x = readyPos[0]
         self.rect.y = readyPos[1]
-        self.player_1 = Tank(2, 4, 2, self.rect)
+        self.player_1 = Tank(2, 4, 2, self.rect, [1*UNIT, 19*UNIT])
         self.image = block.get_image()
-        self.obstacles = block.build_battle(self, self.image, screen)
 
     def event_loop(self):
         for event in pg.event.get():
@@ -195,10 +195,8 @@ class Control:
         while not self.done:
             screen.fill(color)
             self.event_loop()
-            # collisions = pg.sprite.spritecollide(self, testImage, False)
-            # pg.sprite.spritecollideany(self, testImage)
-            block.build_battle(self, self.image, screen)
-            self.player_1.play_tank(self.obstacles)
+            block.build_battle(self,self.image,screen)
+            self.player_1.play_tank()
             posX -= 0.1
             if posX < -textSurface.get_width():
                 posX = 640 - textSurface.get_width()
